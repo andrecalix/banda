@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glimtech - Jingle Sincronizado</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body {
+      background: #090c12;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+      padding: 16px;
+    }
+    .stage {
+      position: relative;
+      width: min(92vw, 540px);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 2px solid #1e90ff;
+      box-shadow: 0 0 30px rgba(30, 144, 255, 0.35);
+      background: #000;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1);
+      transition: opacity 0.25s ease;
+    }
+    .slide.active {
+      opacity: 1;
+      animation: kenBurns 4.5s ease-in-out infinite alternate, beatPulse 0.6s ease-in-out infinite;
+    }
+    @keyframes kenBurns {
+      0% { transform: scale(1) translate(0, 0); }
+      100% { transform: scale(1.06) translate(-1%, -1%); }
+    }
+    @keyframes beatPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.07); }
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      max-width: 540px;
+    }
+    button {
+      background: #1e90ff;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover { background: #0f74d8; }
+    .info {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      text-align: center;
+    }
+    audio { width: min(92vw, 540px); }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <img class="slide active" src="img1.png" data-start="0.0" alt="Cena 1" />
+    <img class="slide" src="img2.png" data-start="5.5" alt="Cena 2" />
+    <img class="slide" src="img3.png" data-start="10.0" alt="Cena 3" />
+    <img class="slide" src="img4.png" data-start="15.5" alt="Cena 4" />
+    <img class="slide" src="img5.png" data-start="20.5" alt="Cena 5" />
+  </div>
 
+  <audio id="jingle" src="Glimtech.mp4" controls></audio>
+
+  <div class="controls">
+    <button id="playBtn">Play / Pause</button>
+    <button id="markBtn">Marcar troca de imagem no tempo atual</button>
+  </div>
+  <div class="info" id="status">Tempo: 0.0s | Cena atual: 1 (img1.png)</div>
+
+  <script>
+    const audio = document.getElementById("jingle");
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const statusEl = document.getElementById("status");
+    const playBtn = document.getElementById("playBtn");
+    const markBtn = document.getElementById("markBtn");
+
+    let currentIdx = 0;
+
+    function updateScene() {
+      const t = audio.currentTime;
+      let activeIdx = 0;
+
+      slides.forEach((slide, idx) => {
+        const start = parseFloat(slide.dataset.start || "0");
+        if (t >= start) activeIdx = idx;
+      });
+
+      if (activeIdx !== currentIdx) {
+        currentIdx = activeIdx;
+        slides.forEach((s, i) => s.classList.toggle("active", i === currentIdx));
+      }
+
+      statusEl.textContent = `Tempo: ${t.toFixed(1)}s | Cena atual: ${currentIdx + 1} (${slides[currentIdx].getAttribute("src")})`;
+      requestAnimationFrame(updateScene);
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (audio.paused) audio.play();
+      else audio.pause();
+    });
+
+    markBtn.addEventListener("click", () => {
+      const nextIdx = (currentIdx + 1) % slides.length;
+      slides[nextIdx].dataset.start = audio.currentTime.toFixed(1);
+      alert(`Cena ${nextIdx + 1} (${slides[nextIdx].getAttribute("src")}) marcada para iniciar em ${audio.currentTime.toFixed(1)}s!`);
+    });
+
+    requestAnimationFrame(updateScene);
+  </script>
+</body>
+</html>
